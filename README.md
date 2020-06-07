@@ -1,5 +1,5 @@
 # Tipologia i Cicle de Vida de les Dades: 
-# Preparació, Neteja i Anàlisis de Dades (PRA02)
+## Preparació, Neteja i Anàlisis de Dades (PRA02)
 
 Data Entrega: 9 Juny 2020
 Alumne : Xavi Recaj 
