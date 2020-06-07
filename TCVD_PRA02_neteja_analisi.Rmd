@@ -13,7 +13,7 @@ output:
     df_print: kable
     number_sections: yes
     theme: spacelab
-    toc: yes
+    toc:  yes
     toc_float: true
     toc_depth: 3
 ---
@@ -40,7 +40,7 @@ library(caret)        #Classification and Regression Training
 ```
 
 ****
-# 1.Descripció del dataset. Perquè és important i quina pregunta/problema pretén respondre?
+# Descripció del dataset. Perquè és important i quina pregunta/problema pretén respondre?
 ****
 
 **Kaggle Contest Dataset - Ames House Prices**
@@ -50,17 +50,19 @@ Aquest és un dataset que s'utilitza en una competició publicada a [kaggle.com]
 L'objectiu d'aquesta competició, aconseguir un model predictiu de preus de venda d'habitatges él més acurat possible.  
 
 ****
-# 2. Integració i selecció de les dades d’interès a analitzar.
+# Integració i selecció de les dades d’interès a analitzar.
 ****
 
-## 2.1 Importar dataset - .csv 
+## Importar dataset - .csv 
 ```{r load_csv}
 train_csv <- read.table("./data/train.csv", sep=",", header=TRUE, stringsAsFactors = TRUE)
+
+test_csv <- read.table("./data/test.csv", sep=",", header=TRUE, stringsAsFactors = TRUE)
 
 str(train_csv)
 ```
 
-## 2.2 Descripció de les variables
+## Descripció de les variables
 Aquest dataset està format per les variables següents:  
 
 | SalePrice     |  the   property's sale price in dollars. This is the target variable that you're   trying to predict. |
@@ -145,7 +147,7 @@ Aquest dataset està format per les variables següents:
 | SaleType      |  Type of sale                                                                                         |
 | SaleCondition |  Condition of sale                                                                                    |
 
-## 2.3 Conversió de tipus: Variables Qualitatives
+## Conversió de tipus: Variables Qualitatives
 S'observa que no totes les variables són numèriques, ni totes les variables numèriques s'han de considerar com a **quantitatives**. En aquest pas del procés de selecció, convertirem les variables que considerem **qualitatives** a factor.
 
 Exemple:
@@ -179,9 +181,18 @@ train_csv$GarageYrBlt <- as.factor(train_csv$GarageYrBlt)
 train_csvBsmtFullBath <- as.factor(train_csv$BsmtFullBath)
 train_csv$Fireplaces <- as.factor(train_csv$Fireplaces)
 
+test_csv$MSSubClass <- as.factor(test_csv$MSSubClass)
+test_csv$MoSold <- as.factor(test_csv$MoSold)
+test_csv$YrSold <- as.factor(test_csv$YrSold)
+test_csv$YearBuilt <-as.factor(test_csv$YearBuilt)
+test_csv$YearRemodAdd <- as.factor(test_csv$YearRemodAdd)
+test_csv$GarageYrBlt <- as.factor(test_csv$GarageYrBlt)
+test_csvBsmtFullBath <- as.factor(test_csv$BsmtFullBath)
+test_csv$Fireplaces <- as.factor(test_csv$Fireplaces)
+
 str(train_csv$MSSubClass)
 ```
-## 2.4 Conversió de Variables: Rangs
+## Conversió de Variables: Rangs
 
 S'observa que hi ha un conjunt de variables que representen la qualitat o les condicions d'algun atribut de la vivenda. Aquestes variables es poden considerar **qualitatives ordinals**, per tant, les convertirem a un rang numèric, on els valors més alts signifiquen millors qualitats o condicions.
 ```{r}
@@ -212,10 +223,38 @@ train_csv$BsmtFinType1Rank<-as.numeric(train_csv$BsmtFinType1)
 train_csv$BsmtFinType2Rank<-as.numeric(train_csv$BsmtFinType2)
 ```
 
-## 2.5 Creació de noves variables
+```{r}
+levels(test_csv$ExterQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1,"NA"=0)
+levels(test_csv$ExterCond) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1,"NA"=0)
+levels(test_csv$BsmtQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$BsmtCond) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$HeatingQC) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$CentralAir) = list("N" = 0, "Y" = 1)
+levels(test_csv$KitchenQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$FireplaceQu) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$GarageQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$GarageCond) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(test_csv$BsmtFinType1) = list ("GLQ"=6, "ALQ"=5, "BLQ"=4, "Rec"=3, "LwQ"=2, "Unf"=1,"NA"=0)
+levels(test_csv$BsmtFinType2) = list ("GLQ"=6, "ALQ"=5, "BLQ"=4, "Rec"=3, "LwQ"=2, "Unf"=1,"NA"=0)
+
+test_csv$ExterQualRank<-as.numeric(test_csv$ExterQual)
+test_csv$ExterCondRank<-as.numeric(test_csv$ExterCond)
+test_csv$BsmtQualRank<-as.numeric(test_csv$BsmtQual)
+test_csv$BsmtCondRank<-as.numeric(test_csv$BsmtCond)
+test_csv$HeatingQCRank<-as.numeric(test_csv$HeatingQC)
+test_csv$CentralAirRank<-as.numeric(test_csv$CentralAir)
+test_csv$KitchenQualRank<-as.numeric(test_csv$KitchenQual)
+test_csv$FirePlaceQuRank<-as.numeric(test_csv$FireplaceQu)
+test_csv$GarageQualRank<-as.numeric(test_csv$GarageQual)
+test_csv$GarageCondRank<-as.numeric(test_csv$GarageCond)
+test_csv$BsmtFinType1Rank<-as.numeric(test_csv$BsmtFinType1)
+test_csv$BsmtFinType2Rank<-as.numeric(test_csv$BsmtFinType2)
+```
+
+## Creació de noves variables
 Per enriquir el model de predicció, podem crear noves variables generades a partir de fòrmules. 
 
-### 2.5.1 RANK: Neighborhood
+### RANK: Neighborhood
 En aquest cas, crearem un rànquing de barris de la ciutat de Ames, basat en la mediana de preu de venta, de manera que assignarem el valor més alt al barri que tingui el valor més alt.
 ```{r neightborhood-rank}
 boxplot(train_csv$SalePrice~train_csv$Neighborhood ,  col="blue")
@@ -229,33 +268,45 @@ df_neighborhood[order(df_neighborhood$NeighborhoodRank),] %>% select (2,16)
 
 for (i in 1:length(df_neighborhood$group1)) {
   train_csv$NeighborhoodRank[train_csv$Neighborhood==levels(df_neighborhood$group1)[i]]<-df_neighborhood$NeighborhoodRank[df_neighborhood$group1==levels(df_neighborhood$group1)[i]]
-}
+
+  test_csv$NeighborhoodRank[test_csv$Neighborhood==levels(df_neighborhood$group1)[i]]<-df_neighborhood$NeighborhoodRank[df_neighborhood$group1==levels(df_neighborhood$group1)[i]]
+
+    }
 
 ```
 
-### 2.5.2 FÒRMULA: HouseAge
+### FÒRMULA: HouseAge
 Una variable nova que podria ser interessant és l'antiguitat de la vivenda `HouseAge`. Aquesta variable s'obté de restar l'any de la remodelació respecte l'any actual. En aquest cas, l'any actual serà el valor màxim de la variable any de la venta `YrSold`.
 ```{r}
 train_csv$HouseAge <- as.numeric(as.character(train_csv$YearRemodAdd)) - max(as.numeric(train_csv$YrSold))
+
+test_csv$HouseAge <- as.numeric(as.character(test_csv$YearRemodAdd)) - max(as.numeric(test_csv$YrSold))
 ```
 
-### 2.5.3 FÒRMULA: RemodeledFlag
+### FÒRMULA: RemodeledFlag
 Un altre variable que es pot afegir al model, es un indicador de si la vivenda ha estat remodelada o no. En aquest cas, la fòrmula asignarà el valor `0` si la resta entre l'any de construcció i l'any de remodelació es ZERO o en el cas contrari, assignarà el valor `1`.  
 ```{r}
 train_csv$RemodeledFlag[(as.numeric(as.character(train_csv$YearBuilt))-as.numeric(as.character(train_csv$YearRemodAdd)))==0]<-0
 train_csv$RemodeledFlag[(as.numeric(as.character(train_csv$YearBuilt))-as.numeric(as.character(train_csv$YearRemodAdd)))<0]<-1
 
+test_csv$RemodeledFlag[(as.numeric(as.character(test_csv$YearBuilt))-as.numeric(as.character(test_csv$YearRemodAdd)))==0]<-0
+test_csv$RemodeledFlag[(as.numeric(as.character(test_csv$YearBuilt))-as.numeric(as.character(test_csv$YearRemodAdd)))<0]<-1
+
 ```
 
-### 2.5.3 FÒRMULA: PoolFlag
+### FÒRMULA: PoolFlag
 Definir una nova variable binària `PoolFlag` on s'indica amb el valor `1` que l'habitatge disposa de piscina i amb el valor `0` en cas contrari. 
 ```{r}
 train_csv$PoolFlag[train_csv$PoolArea>0]<-1
 train_csv$PoolFlag[train_csv$PoolArea==0]<-0
+
+test_csv$PoolFlag[test_csv$PoolArea>0]<-1
+test_csv$PoolFlag[test_csv$PoolArea==0]<-0
+
 ```
 
 
-## 2.6 Screening: Distribució de valors (factors)
+## Screening: Distribució de valors (factors)
 A partir de l'exploració visual de la distribució dels valors de les variables **qualitatives** es preten detectar variables amb poca variabilitat (acumulació de observacions sobre un o poc valors). 
 
 ```{r var_datatypes}
@@ -288,7 +339,7 @@ S'observa que algunes variables categòriques acumulen la majoria de casos en un
   barplot(counts, xlab="Street", col=coul)
 ```
 
-### 2.6.1: Eliminar atributs
+### Eliminar atributs
 
 Eliminar atributs que s'ha detectat amb l'exploració visual que tenen poca variablititat ja que no tenen capacitat predictiva donat que la majoria de valors estan concentrats una única categoria.
 
@@ -310,15 +361,34 @@ train_clean$RoofStyle <- NULL
 train_clean$Condition1 <- NULL
 train_clean$Condition2 <- NULL
 train_clean$SaleCondition <-NULL
+
+test_clean <- test_csv
+test_clean$Street <- NULL
+test_clean$Utilities <- NULL
+test_clean$Heating <- NULL
+test_clean$Electrical <- NULL
+test_clean$KitchenAbvGr <- NULL
+test_clean$BsmtHalfBath <- NULL
+test_clean$Functional <- NULL
+test_clean$GarageQual <- NULL
+test_clean$GarageCond <- NULL
+test_clean$PavedDrive <- NULL
+test_clean$SalesType <- NULL
+test_clean$RoofMatl <- NULL
+test_clean$RoofStyle <- NULL
+test_clean$Condition1 <- NULL
+test_clean$Condition2 <- NULL
+test_clean$SaleCondition <-NULL
+
 ```
 
 ****
-# 3. Neteja de les dades
+# Neteja de les dades
 ****
 
-## 3.1 Les dades contenen zeros o elements buits? Com gestionaries aquests casos?
+## Les dades contenen zeros o elements buits? Com gestionaries aquests casos?
 
-### 3.1.1 Valors Nuls - Eliminar
+### Valors Nuls - Eliminar
 Buscar les variables tenen valors nuls i seleccionem aquelles que més dels 50% no tenen valors informats.
 ```{r}
 NA_cols <- sapply(train_clean, function(x) sum(is.na(x))) 
@@ -329,42 +399,49 @@ print(exclude_cols)
 
 Visualitzar les distribucions de valors nuls.
 ```{r graph-missing-value-before}
-# Creating a graph for understanding the missing value distribution.
 aggr(x = train_clean[names(NA_cols)])
 ```
 
 Eliminar les variables amb més del 50% de valors nuls
 ```{r delete-most-null-cols}
-include_cols <- setdiff(names(train_clean), names(exclude_cols))
-train_clean <- train_clean[include_cols]
+train_include_cols <- setdiff(names(train_clean), names(exclude_cols))
+test_include_cols <- setdiff(names(test_clean), names(exclude_cols))
+train_clean <- train_clean[train_include_cols]
+test_clean <- test_clean[test_include_cols]
+
 ```
 
-### 3.1.2 Valors Nuls - Imputar
+### Valors Nuls - Imputar
 La resta de variables que tenen valors nuls s'imputaran valors utilitzant l'algorisme **kNN** per *k=5* veïns més propers. Mitjançant la **distància de Gower** es determina el valor que s'ha d'imputar utilitzant la mitjana o el valor més freqüent en els veïns més properts segons si la variable és de tipus numèrica o categòrica.
 ```{r knn-gower-imputation}
-NA_cols <- sapply(train_clean, function(x) sum(is.na(x))) 
-NA_columns <- sort(NA_cols[NA_cols>0], decreasing = TRUE)
-train_knn <- kNN(train_clean, variable=names(NA_cols), k=5 )
+train_NA_cols <- sapply(train_clean, function(x) sum(is.na(x))) 
+test_NA_cols <- sapply(test_clean, function(x) sum(is.na(x))) 
+
+train_NA_columns <- sort(train_NA_cols[train_NA_cols>0], decreasing = TRUE)
+
+train_knn <- kNN(train_clean, variable=names(train_NA_cols), k=5 )
+test_knn <- kNN(test_clean, variable=names(test_NA_cols), k=5 )
+
 train_clean <- train_knn[,1:ncol(train_clean)]
+test_clean <- test_knn[,1:ncol(train_clean)]
 ```
 
 Visualitzar la distribució de valors nuls per assegurar que no en queda cap.
 ```{r graph-missing-value-after}
-# Creating a graph for understanding the missing value distribution.
-aggr(x = train_clean[names(NA_columns)])
+aggr(x = train_clean[names(train_NA_columns)])
 ```
 
-## 3.2 Valors Extrems: Identificació i tractament.
+## Valors Extrems: Identificació i tractament.
 Buscar valors extrems a les variables **numèriques** del dataset. Utilzant gràfiques de tipus **boxplot** és poden observar quines variables tenen valors extrems.
 ```{r}
-df=train_clean
-#Filter out 'id' after selecting factors
-train_numeric=df[,sapply(df, is.numeric) & colnames(df) != "Id" & colnames(df) != "SalePrice"]
+df<-train_clean
+train_numeric<-df[,sapply(df, is.numeric) & colnames(df) != "Id" & colnames(df) != "SalePrice"]
+test_numeric <-df[,sapply(df, is.numeric) & colnames(df) != "Id" & colnames(df) != "SalePrice"]
 describe(train_numeric, skew=TRUE)
 
 ```
 
-### 3.2.1 Valors Extrems - Identificació
+### Valors Extrems - Identificació
 ```{r boxplot2, fig.cap="Boxplot-numerics"}
 par(mfrow=c(3,4))
 z_col=ncol(train_numeric) 
@@ -375,7 +452,7 @@ for (i in 1:z_col){
 par(mfrow=c(1,1))
 ```
 
-### 3.2.2 Valors Extrems - Tractament
+### Valors Extrems - Tractament
 Un mètode bàsic per tractar `outliers` és la **Mitjana winsoritzada** que consisteix a remplaçar els valors que es troben fora del interval `0.05...0.95` pels valors mínims i màxims d'aquest interval.
 
 *Exemple:*
@@ -388,9 +465,12 @@ $ max(vector_{winsor})=44, min(vector_{winsor}=12), outliers = {0.1,1,99,125}$
 S'obte un $vector_{resultat}$ on els outliers s'han remplaçat pels valors minim i màxim.
 $ vector_{resultat} = {12,12,12,14,16,18,19,21,24,26,29,32,33,35,39,40,41,44,44,44}$
 
-**Acció#3.2.1:** Aplicar la mitjana winsoritzada
+**Acció:** Aplicar la mitjana winsoritzada
 ```{r}
 train_numeric[] <- winsor(train_numeric, trim = 0.1)
+
+test_numeric[] <- winsor(test_numeric, trim = 0.1)
+
 ```
 
 Visualitza a través de diagrama de caixes el resultat del tractament de outliers. S'observa que cap variable numèrica té outliers.
@@ -405,18 +485,17 @@ par(mfrow=c(1,1))
 ```
 
 ****
-# 4.Anàlisi de les dades
+# Anàlisi de les dades
 ****
 
-## 4.1 Selecció dels grups de dades que es volen analitzar/comparar (planificació dels
+## Selecció dels grups de dades que es volen analitzar/comparar (planificació dels
 anàlisis a aplicar).
 
-### 4.1.1 Model Supervisat
+### Model Supervisat
 Partició de les dades aplicant el mètode d'exclusió, seleccionant un 80% de dades per entrenament i el 20% restant s'utilitzarà per a testejar el model.
 ```{r model-supervisat-seleccio}
 set.seed(2020)
 train_clean <- df[,sapply(train_clean, is.numeric)]
-train_clean$GrLivArea <- train_csv$GrLivArea
 
 # Particionem les dades per formar un conjunt d'entrenament amb el 80% de les dades seleccionades aleatòriament
 train_rows <- sample(rownames(train_clean), dim(train_clean)[1]*0.8)
@@ -426,7 +505,7 @@ test_rows <- setdiff(rownames(train_clean), train_rows)
 test_data <- train_clean[test_rows, ]
 ```
 
-### 4.1.2 Anàlisi Inferencial
+### Anàlisi Inferencial
 Es preten respondre la pregunta de si la mitjana de preus de venta és inferior després d'explotar la bombolla inmobiliaria. Donat que el dataset proporciona les transaccions de venta de vivendes entre el 2006 i el 2010, es poden crear els 2 grups de dades següents:
 
 - `Sales-Before`: Transaccions de venda realitzades durant els anys 2006 i fins a març de 2007
@@ -441,9 +520,9 @@ sales_before <- train_clean[idx,]$SalePrice
 sales_after <- train_clean[-idx,]$SalePrice
 ```
 
-## 4.2. Comprovació de la normalitat i homogeneïtat de la variància.
+## Comprovació de la normalitat i homogeneïtat de la variància.
 
-### 4.2.1 Comprovació de la normalitat
+### Comprovació de la normalitat
 
 Aplicar el test de `Shapiro-Wilk`i `Kolmogorov-Smirnov`per comprovar si la mostra `sales_before` segueix una distribució normal.
 ```{r inferencial-normalitat-sales-before}
@@ -577,7 +656,7 @@ Comprovació del tamany de les mostres:
 - Sales Before, n = `r length(sales_before)` > 30 => Distibució Normal
 - Sales Before, n = `r length(sales_after)` > 30 => Distibució Normal
 
-### 4.2.2 Comprovació de la Homoscedasticitat
+### Comprovació de la Homoscedasticitat
 Comprovar si les dues mostres `sales_before` i `sales_after` compleixen la igualtat de variàncies entre ells.
 
 - `Hipòtesi Nula`: Variàncies de les mostres són iguals
@@ -607,9 +686,9 @@ fligner.test(SalePrice~group, data = df_group)
 Donat que el `p-value` obtingut aplicant el test de `Levene` i el test de `Flingner` es inferior al nivell de significació `alpha=0.05`, es rebutja la hipotèsi nul·la `H0`i s'accepta l hipòtesi alternativa `H1`, es a dir, que les variàncies de les mostres ***són diferents***.
 
 
-## 4.3. Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l’objectiu de l’estudi, aplicar proves de contrast d’hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d’anàlisi diferents.
+## Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l’objectiu de l’estudi, aplicar proves de contrast d’hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d’anàlisi diferents.
 
-### 4.3.1 Contrast de mostres
+### Contrast de mostres
 
 Donat que les dues mostres són independents però no es compleix la homoscedasticitat, s'aplica la prova no paràmetrica de `Mann-Whitney`.
 
@@ -625,7 +704,7 @@ wilcox.test(sales_before_bx,sales_after_bx, paired = FALSE)
 
 Donat que el `p-value` que s'ha obtingut és inferior al nivell de significació `alpha=0.05`, es rebutja la hipòtesi nula i s'accepta que les mostres tenen diferencies estadístiques significatives. Aplicat al context de les mostres, s'arriba a la conclusió que els preus de les vendes realitzats abans i després de l'explosió de la bombolla inmobiliaria tenen diferencies significatives.
 
-### 4.3.2 Model Supervisat: Regressió Lineal Múltiple
+### Model Supervisat: Regressió Lineal Múltiple
 ```{r}
 train_data$SalePrice <- train_clean[train_rows,]$SalePrice
 test_data$SalePrice <-train_clean[test_rows,]$SalePrice
@@ -635,19 +714,7 @@ summary(model_lm)
 
 ```
 
-```{r}
-prediccions <- predict(model_lm, newdata=test_data)
-taula_prediccions <- data.frame(test_data$SalePrice, prediccions, residuals=test_data$SalePrice-prediccions)
-head(taula_prediccions,10)
-
-
-taula_comparativa=data.frame(actual=test_data$SalePrice, predicted=prediccions)
-
-mape=mean(abs(taula_comparativa$actual-taula_comparativa$predicted)/taula_comparativa$actual)
-precisio_model=1-mape
-precisio_model 
-```
-### 4.3.3 Correlacions: Multicol·linealitat
+### Correlacions: Multicol·linealitat
 Per al posterior disseny d'un model predictiu de regressió lineal, comprovar si es detecten variables predictores que estiguin molt correlacionades entre elles (multicol·linelitat).
 
 ```{r}
@@ -693,7 +760,7 @@ predictors <- predictors[colnames(predictors)!="PoolArea"]
 ***Interpretació del Resultat:***
 No es detecta multicol·linealitat entre cap de les variables predictores, donat que cap dels coeficients de correlació ha superat el llindar del 80%.
 
-### 4.3.4 Model Supervisat: Millora i Precisió
+### Model Supervisat: Precisió
 Després d'eliminar les variables predictores poc significatives i tractar si existeix multicol·linealitat entre elles, es torna a crear un model i s'evalua la seva precisió.
 ```{r}
 train_data<-train_data[colnames(predictors)]
@@ -706,6 +773,7 @@ model_lm <- lm(formula=train_data$SalePrice ~., data=train_data) # build the mod
 summary(model_lm)
 
 ```
+
 ```{r}
 prediccions <- predict(model_lm, newdata=test_data)
 taula_prediccions <- data.frame(test_data$SalePrice, prediccions, residuals=test_data$SalePrice-prediccions)
@@ -717,4 +785,19 @@ taula_comparativa=data.frame(actual=test_data$SalePrice, predicted=prediccions)
 mape=mean(abs(taula_comparativa$actual-taula_comparativa$predicted)/taula_comparativa$actual)
 precisio_model=1-mape
 precisio_model 
+```
+## Generació de Fitxers amb Dades Finals Analitzades
+```{r}
+write.csv(train_clean, "./data/train_clean.csv", row.names = FALSE)
+write.csv(test_clean, "./data/test_clean.csv", row.names = FALSE)
+
+```
+
+```{r}
+kaggle_pred <- predict(model_lm, newdata=test_clean)
+kaggle_pred <- data.frame(test_clean$Id, kaggle_pred)
+names(kaggle_pred)<-c("Id", "SalePrice")
+kaggle_pred
+
+write.csv(kaggle_pred,"./data/submission.csv", row.names = FALSE, col.names = FALSE)
 ```
