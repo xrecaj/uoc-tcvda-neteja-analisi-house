@@ -3,7 +3,9 @@
 **(PRA02)**
 
 **Data Entrega**: 9 Juny 2020
+
 **Alumne** : Xavi Recaj 
+
 **Màster Ciència de Dades**
 
 Github: https://github.com/xrecaj/uoc-tcvda-neteja-analisi-house
