@@ -1,0 +1,720 @@
+---
+title: "Tipologia i Cicle de Vida de les dades(PRA02): Neteja i Anàlisi de Dades"
+author: "Xavi Recaj"
+date: "Juny 2020"
+knit: (function(input_file, encoding) {
+    out_dir <- 'docs';
+    rmarkdown::render(input_file,
+    encoding=encoding,
+    output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+output: 
+  html_document:
+    highlight: default
+    df_print: kable
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+---
+<!-- R Commander Markdown Template -->
+
+```{r echo=FALSE}
+# include this code chunk as-is to set options
+knitr::opts_chunk$set(comment=NA, prompt=TRUE, out.width=750, fig.height=8, fig.width=8)
+```
+
+```{r message=FALSE, warning=FALSE }
+# Libreries R necessàries per aquesta pràctica.
+
+library(tidyverse)    #Metapackage of all tidyverse packages
+library(VIM)          #Visualization and Imputation Missing Values
+library(psych)        #Procedures for Physcological, Psycometric and Personality Research (windsor)
+library(RColorBrewer) #ColorBrewer Palettes
+library(DescTools)    #Tools for Descriptive Statistics
+library(car)          #Companion to Applied Regression
+library(ggpubr)       #'ggplot2' Based Publication Ready Plots
+library(corrplot)     #Visualitzation of a Correlation Matrix
+library(caret)        #Classification and Regression Training
+
+```
+
+****
+# 1.Descripció del dataset. Perquè és important i quina pregunta/problema pretén respondre?
+****
+
+**Kaggle Contest Dataset - Ames House Prices**
+
+Aquest és un dataset que s'utilitza en una competició publicada a [kaggle.com](https://www.kaggle.com/c/house-prices-advanced-regression-techniques) i que conté 79 variables que descriuen les característiques dels habitatges residencials de la ciutat de Ames (Oiwa, US) i quin ha sigut el preu de venda.  
+
+L'objectiu d'aquesta competició, aconseguir un model predictiu de preus de venda d'habitatges él més acurat possible.  
+
+****
+# 2. Integració i selecció de les dades d’interès a analitzar.
+****
+
+## 2.1 Importar dataset - .csv 
+```{r load_csv}
+train_csv <- read.table("./data/train.csv", sep=",", header=TRUE, stringsAsFactors = TRUE)
+
+str(train_csv)
+```
+
+## 2.2 Descripció de les variables
+Aquest dataset està format per les variables següents:  
+
+| SalePrice     |  the   property's sale price in dollars. This is the target variable that you're   trying to predict. |
+|---------------|-------------------------------------------------------------------------------------------------------|
+| MSSubClass    |  The building class                                                                                   |
+| MSZoning      |  The general zoning classification                                                                    |
+| LotFrontage   |  Linear feet of street connected to   property                                                        |
+| LotArea       |  Lot size in square feet                                                                              |
+| Street        |  Type of road access                                                                                  |
+| Alley         |  Type of alley access                                                                                 |
+| LotShape      |  General shape of property                                                                            |
+| LandContour   |  Flatness of the property                                                                             |
+| Utilities     |  Type of utilities available                                                                          |
+| LotConfig     |  Lot configuration                                                                                    |
+| LandSlope     |  Slope of property                                                                                    |
+| Neighborhood  |  Physical locations within Ames   city limits                                                         |
+| Condition1    |  Proximity to main road or railroad                                                                   |
+| Condition2    |  Proximity to main road or railroad   (if a second is present)                                        |
+| BldgType      |  Type of dwelling                                                                                     |
+| HouseStyle    |  Style of dwelling                                                                                    |
+| OverallQual   |  Overall material and finish   quality                                                                |
+| OverallCond   |  Overall condition rating                                                                             |
+| YearBuilt     |  Original construction date                                                                           |
+| YearRemodAdd  |  Remodel date                                                                                         |
+| RoofStyle     |  Type of roof                                                                                         |
+| RoofMatl      |  Roof material                                                                                        |
+| Exterior1st   |  Exterior covering on house                                                                           |
+| Exterior2nd   |  Exterior covering on house (if   more than one material)                                             |
+| MasVnrType    |  Masonry veneer type                                                                                  |
+| MasVnrArea    |  Masonry veneer area in square feet                                                                   |
+| ExterQual     |  Exterior material quality                                                                            |
+| ExterCond     |  Present condition of the material   on the exterior                                                  |
+| Foundation    |  Type of foundation                                                                                   |
+| BsmtQual      |  Height of the basement                                                                               |
+| BsmtCond      |  General condition of the basement                                                                    |
+| BsmtExposure  |  Walkout or garden level basement   walls                                                             |
+| BsmtFinType1  |  Quality of basement finished area                                                                    |
+| BsmtFinSF1    |  Type 1 finished square feet                                                                          |
+| BsmtFinType2  |  Quality of second finished area   (if present)                                                       |
+| BsmtFinSF2    |  Type 2 finished square feet                                                                          |
+| BsmtUnfSF     |  Unfinished square feet of basement   area                                                            |
+| TotalBsmtSF   |  Total square feet of basement area                                                                   |
+| Heating       |  Type of heating                                                                                      |
+| HeatingQC     |  Heating quality and condition                                                                        |
+| CentralAir    |  Central air conditioning                                                                             |
+| Electrical    |  Electrical system                                                                                    |
+| 1stFlrSF      |  First Floor square feet                                                                              |
+| 2ndFlrSF      |  Second floor square feet                                                                             |
+| LowQualFinSF  |  Low quality finished square feet   (all floors)                                                      |
+| GrLivArea     |  Above grade (ground) living area   square feet                                                       |
+| BsmtFullBath  |  Basement full bathrooms                                                                              |
+| BsmtHalfBath  |  Basement half bathrooms                                                                              |
+| FullBath      |  Full bathrooms above grade                                                                           |
+| HalfBath      |  Half baths above grade                                                                               |
+| Bedroom       |  Number of bedrooms above basement   level                                                            |
+| Kitchen       |  Number of kitchens                                                                                   |
+| KitchenQual   |  Kitchen quality                                                                                      |
+| TotRmsAbvGrd  |  Total rooms above grade (does not   include bathrooms)                                               |
+| Functional    |  Home functionality rating                                                                            |
+| Fireplaces    |  Number of fireplaces                                                                                 |
+| FireplaceQu   |  Fireplace quality                                                                                    |
+| GarageType    |  Garage location                                                                                      |
+| GarageYrBlt   |  Year garage was built                                                                                |
+| GarageFinish  |  Interior finish of the garage                                                                        |
+| GarageCars    |  Size of garage in car capacity                                                                       |
+| GarageArea    |  Size of garage in square feet                                                                        |
+| GarageQual    |  Garage quality                                                                                       |
+| GarageCond    |  Garage condition                                                                                     |
+| PavedDrive    |  Paved driveway                                                                                       |
+| WoodDeckSF    |  Wood deck area in square feet                                                                        |
+| OpenPorchSF   |  Open porch area in square feet                                                                       |
+| EnclosedPorch |  Enclosed porch area in square feet                                                                   |
+| 3SsnPorch     |  Three season porch area in square   feet                                                             |
+| ScreenPorch   |  Screen porch area in square feet                                                                     |
+| PoolArea      |  Pool area in square feet                                                                             |
+| PoolQC        |  Pool quality                                                                                         |
+| Fence         |  Fence quality                                                                                        |
+| MiscFeature   |  Miscellaneous feature not covered   in other categories                                              |
+| MiscVal       |  $Value of miscellaneous feature                                                                      |
+| MoSold        |  Month Sold                                                                                           |
+| YrSold        |  Year Sold                                                                                            |
+| SaleType      |  Type of sale                                                                                         |
+| SaleCondition |  Condition of sale                                                                                    |
+
+## 2.3 Conversió de tipus: Variables Qualitatives
+S'observa que no totes les variables són numèriques, ni totes les variables numèriques s'han de considerar com a **quantitatives**. En aquest pas del procés de selecció, convertirem les variables que considerem **qualitatives** a factor.
+
+Exemple:
+MSSubClass: Identifies the type of dwelling involved in the sale.	
+
+        20	1-STORY 1946 & NEWER ALL STYLES
+        30	1-STORY 1945 & OLDER
+        40	1-STORY W/FINISHED ATTIC ALL AGES
+        45	1-1/2 STORY - UNFINISHED ALL AGES
+        50	1-1/2 STORY FINISHED ALL AGES
+        60	2-STORY 1946 & NEWER
+        70	2-STORY 1945 & OLDER
+        75	2-1/2 STORY ALL AGES
+        80	SPLIT OR MULTI-LEVEL
+        85	SPLIT FOYER
+        90	DUPLEX - ALL STYLES AND AGES
+       120	1-STORY PUD (Planned Unit Development) - 1946 & NEWER
+       150	1-1/2 STORY PUD - ALL AGES
+       160	2-STORY PUD - 1946 & NEWER
+       180	PUD - MULTILEVEL - INCL SPLIT LEV/FOYER
+       190	2 FAMILY CONVERSION - ALL STYLES AND AGES
+
+
+```{r conversion_to_factor}
+train_csv$MSSubClass <- as.factor(train_csv$MSSubClass)
+train_csv$MoSold <- as.factor(train_csv$MoSold)
+train_csv$YrSold <- as.factor(train_csv$YrSold)
+train_csv$YearBuilt <-as.factor(train_csv$YearBuilt)
+train_csv$YearRemodAdd <- as.factor(train_csv$YearRemodAdd)
+train_csv$GarageYrBlt <- as.factor(train_csv$GarageYrBlt)
+train_csvBsmtFullBath <- as.factor(train_csv$BsmtFullBath)
+train_csv$Fireplaces <- as.factor(train_csv$Fireplaces)
+
+str(train_csv$MSSubClass)
+```
+## 2.4 Conversió de Variables: Rangs
+
+S'observa que hi ha un conjunt de variables que representen la qualitat o les condicions d'algun atribut de la vivenda. Aquestes variables es poden considerar **qualitatives ordinals**, per tant, les convertirem a un rang numèric, on els valors més alts signifiquen millors qualitats o condicions.
+```{r}
+levels(train_csv$ExterQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1,"NA"=0)
+levels(train_csv$ExterCond) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1,"NA"=0)
+levels(train_csv$BsmtQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$BsmtCond) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$HeatingQC) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$CentralAir) = list("N" = 0, "Y" = 1)
+levels(train_csv$KitchenQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$FireplaceQu) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$GarageQual) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$GarageCond) = list("Ex" = 5, "Gd" = 4, "TA" = 3,"Fa"=2, "Po" = 1, "NA"=0)
+levels(train_csv$BsmtFinType1) = list ("GLQ"=6, "ALQ"=5, "BLQ"=4, "Rec"=3, "LwQ"=2, "Unf"=1,"NA"=0)
+levels(train_csv$BsmtFinType2) = list ("GLQ"=6, "ALQ"=5, "BLQ"=4, "Rec"=3, "LwQ"=2, "Unf"=1,"NA"=0)
+
+train_csv$ExterQualRank<-as.numeric(train_csv$ExterQual)
+train_csv$ExterCondRank<-as.numeric(train_csv$ExterCond)
+train_csv$BsmtQualRank<-as.numeric(train_csv$BsmtQual)
+train_csv$BsmtCondRank<-as.numeric(train_csv$BsmtCond)
+train_csv$HeatingQCRank<-as.numeric(train_csv$HeatingQC)
+train_csv$CentralAirRank<-as.numeric(train_csv$CentralAir)
+train_csv$KitchenQualRank<-as.numeric(train_csv$KitchenQual)
+train_csv$FirePlaceQuRank<-as.numeric(train_csv$FireplaceQu)
+train_csv$GarageQualRank<-as.numeric(train_csv$GarageQual)
+train_csv$GarageCondRank<-as.numeric(train_csv$GarageCond)
+train_csv$BsmtFinType1Rank<-as.numeric(train_csv$BsmtFinType1)
+train_csv$BsmtFinType2Rank<-as.numeric(train_csv$BsmtFinType2)
+```
+
+## 2.5 Creació de noves variables
+Per enriquir el model de predicció, podem crear noves variables generades a partir de fòrmules. 
+
+### 2.5.1 RANK: Neighborhood
+En aquest cas, crearem un rànquing de barris de la ciutat de Ames, basat en la mediana de preu de venta, de manera que assignarem el valor més alt al barri que tingui el valor més alt.
+```{r neightborhood-rank}
+boxplot(train_csv$SalePrice~train_csv$Neighborhood ,  col="blue")
+
+df_neighborhood<-describeBy(train_csv$SalePrice, train_csv$Neighborhood, mat=T)
+
+df_neighborhood$NeighborhoodRank<-rank(df_neighborhood$mean, )
+
+df_neighborhood[order(df_neighborhood$NeighborhoodRank),] %>% select (2,16)
+
+
+for (i in 1:length(df_neighborhood$group1)) {
+  train_csv$NeighborhoodRank[train_csv$Neighborhood==levels(df_neighborhood$group1)[i]]<-df_neighborhood$NeighborhoodRank[df_neighborhood$group1==levels(df_neighborhood$group1)[i]]
+}
+
+```
+
+### 2.5.2 FÒRMULA: HouseAge
+Una variable nova que podria ser interessant és l'antiguitat de la vivenda `HouseAge`. Aquesta variable s'obté de restar l'any de la remodelació respecte l'any actual. En aquest cas, l'any actual serà el valor màxim de la variable any de la venta `YrSold`.
+```{r}
+train_csv$HouseAge <- as.numeric(as.character(train_csv$YearRemodAdd)) - max(as.numeric(train_csv$YrSold))
+```
+
+### 2.5.3 FÒRMULA: RemodeledFlag
+Un altre variable que es pot afegir al model, es un indicador de si la vivenda ha estat remodelada o no. En aquest cas, la fòrmula asignarà el valor `0` si la resta entre l'any de construcció i l'any de remodelació es ZERO o en el cas contrari, assignarà el valor `1`.  
+```{r}
+train_csv$RemodeledFlag[(as.numeric(as.character(train_csv$YearBuilt))-as.numeric(as.character(train_csv$YearRemodAdd)))==0]<-0
+train_csv$RemodeledFlag[(as.numeric(as.character(train_csv$YearBuilt))-as.numeric(as.character(train_csv$YearRemodAdd)))<0]<-1
+
+```
+
+### 2.5.3 FÒRMULA: PoolFlag
+Definir una nova variable binària `PoolFlag` on s'indica amb el valor `1` que l'habitatge disposa de piscina i amb el valor `0` en cas contrari. 
+```{r}
+train_csv$PoolFlag[train_csv$PoolArea>0]<-1
+train_csv$PoolFlag[train_csv$PoolArea==0]<-0
+```
+
+
+## 2.6 Screening: Distribució de valors (factors)
+A partir de l'exploració visual de la distribució dels valors de les variables **qualitatives** es preten detectar variables amb poca variabilitat (acumulació de observacions sobre un o poc valors). 
+
+```{r var_datatypes}
+df=train_csv
+train_factor=df[,sapply(df, is.factor) & colnames(df) != "Id"]
+```
+
+```{r barchart-grid-factor-vars}
+
+coul <- brewer.pal(5, "Set2") 
+
+par(mfrow=c(3,3))
+z_col = ncol(train_factor)
+
+for (i in 1:z_col) {
+  counts<- table(train_factor[,i])
+  barplot(counts, xlab=names(train_factor)[i], col=coul)
+}
+par(mfrow=c(1,1))
+
+```
+
+S'observa que algunes variables categòriques acumulen la majoria de casos en un o pocs valors (poca variabilitat).
+
+*Exemple*: `Street`
+
+```{r}
+  coul <- brewer.pal(5, "Set2") 
+  counts<- table(train_factor$Street)
+  barplot(counts, xlab="Street", col=coul)
+```
+
+### 2.6.1: Eliminar atributs
+
+Eliminar atributs que s'ha detectat amb l'exploració visual que tenen poca variablititat ja que no tenen capacitat predictiva donat que la majoria de valors estan concentrats una única categoria.
+
+```{r delete-factors-poor-variability}
+train_clean <- train_csv
+train_clean$Street <- NULL
+train_clean$Utilities <- NULL
+train_clean$Heating <- NULL
+train_clean$Electrical <- NULL
+train_clean$KitchenAbvGr <- NULL
+train_clean$BsmtHalfBath <- NULL
+train_clean$Functional <- NULL
+train_clean$GarageQual <- NULL
+train_clean$GarageCond <- NULL
+train_clean$PavedDrive <- NULL
+train_clean$SalesType <- NULL
+train_clean$RoofMatl <- NULL
+train_clean$RoofStyle <- NULL
+train_clean$Condition1 <- NULL
+train_clean$Condition2 <- NULL
+train_clean$SaleCondition <-NULL
+```
+
+****
+# 3. Neteja de les dades
+****
+
+## 3.1 Les dades contenen zeros o elements buits? Com gestionaries aquests casos?
+
+### 3.1.1 Valors Nuls - Eliminar
+Buscar les variables tenen valors nuls i seleccionem aquelles que més dels 50% no tenen valors informats.
+```{r}
+NA_cols <- sapply(train_clean, function(x) sum(is.na(x))) 
+#sort(NA_cols[NA_cols>0], decreasing = TRUE)
+exclude_cols <- NA_cols[NA_cols>(nrow(train_clean)/2)]
+print(exclude_cols)
+```
+
+Visualitzar les distribucions de valors nuls.
+```{r graph-missing-value-before}
+# Creating a graph for understanding the missing value distribution.
+aggr(x = train_clean[names(NA_cols)])
+```
+
+Eliminar les variables amb més del 50% de valors nuls
+```{r delete-most-null-cols}
+include_cols <- setdiff(names(train_clean), names(exclude_cols))
+train_clean <- train_clean[include_cols]
+```
+
+### 3.1.2 Valors Nuls - Imputar
+La resta de variables que tenen valors nuls s'imputaran valors utilitzant l'algorisme **kNN** per *k=5* veïns més propers. Mitjançant la **distància de Gower** es determina el valor que s'ha d'imputar utilitzant la mitjana o el valor més freqüent en els veïns més properts segons si la variable és de tipus numèrica o categòrica.
+```{r knn-gower-imputation}
+NA_cols <- sapply(train_clean, function(x) sum(is.na(x))) 
+NA_columns <- sort(NA_cols[NA_cols>0], decreasing = TRUE)
+train_knn <- kNN(train_clean, variable=names(NA_cols), k=5 )
+train_clean <- train_knn[,1:ncol(train_clean)]
+```
+
+Visualitzar la distribució de valors nuls per assegurar que no en queda cap.
+```{r graph-missing-value-after}
+# Creating a graph for understanding the missing value distribution.
+aggr(x = train_clean[names(NA_columns)])
+```
+
+## 3.2 Valors Extrems: Identificació i tractament.
+Buscar valors extrems a les variables **numèriques** del dataset. Utilzant gràfiques de tipus **boxplot** és poden observar quines variables tenen valors extrems.
+```{r}
+df=train_clean
+#Filter out 'id' after selecting factors
+train_numeric=df[,sapply(df, is.numeric) & colnames(df) != "Id" & colnames(df) != "SalePrice"]
+describe(train_numeric, skew=TRUE)
+
+```
+
+### 3.2.1 Valors Extrems - Identificació
+```{r boxplot2, fig.cap="Boxplot-numerics"}
+par(mfrow=c(3,4))
+z_col=ncol(train_numeric) 
+
+for (i in 1:z_col){
+  boxplot(train_numeric[,i], main=names(train_numeric)[i],col="blue")
+}
+par(mfrow=c(1,1))
+```
+
+### 3.2.2 Valors Extrems - Tractament
+Un mètode bàsic per tractar `outliers` és la **Mitjana winsoritzada** que consisteix a remplaçar els valors que es troben fora del interval `0.05...0.95` pels valors mínims i màxims d'aquest interval.
+
+*Exemple:*
+$ vector_{outliers} = {0.1,1,12,14,16,18,19,21,24,26,29,32,33,35,39,40,41,44,99,125}$
+
+S'aplica a $vector_{winsor}$ la mitjana winsoritzada al 90%:
+$ vector_{winsor} = {12,14,16,18,19,21,24,26,29,32,33,35,39,40,41,44}$
+$ max(vector_{winsor})=44, min(vector_{winsor}=12), outliers = {0.1,1,99,125}$
+
+S'obte un $vector_{resultat}$ on els outliers s'han remplaçat pels valors minim i màxim.
+$ vector_{resultat} = {12,12,12,14,16,18,19,21,24,26,29,32,33,35,39,40,41,44,44,44}$
+
+**Acció#3.2.1:** Aplicar la mitjana winsoritzada
+```{r}
+train_numeric[] <- winsor(train_numeric, trim = 0.1)
+```
+
+Visualitza a través de diagrama de caixes el resultat del tractament de outliers. S'observa que cap variable numèrica té outliers.
+```{r boxplot3, fig.cap="Boxplot-nooutliers"}
+par(mfrow=c(3,3))
+z_col=ncol(train_numeric)
+
+for (i in 1:z_col){
+  boxplot(train_numeric[,i], main=names(train_numeric)[i],col="cyan")
+}
+par(mfrow=c(1,1))
+```
+
+****
+# 4.Anàlisi de les dades
+****
+
+## 4.1 Selecció dels grups de dades que es volen analitzar/comparar (planificació dels
+anàlisis a aplicar).
+
+### 4.1.1 Model Supervisat
+Partició de les dades aplicant el mètode d'exclusió, seleccionant un 80% de dades per entrenament i el 20% restant s'utilitzarà per a testejar el model.
+```{r model-supervisat-seleccio}
+set.seed(2020)
+train_clean <- df[,sapply(train_clean, is.numeric)]
+train_clean$GrLivArea <- train_csv$GrLivArea
+
+# Particionem les dades per formar un conjunt d'entrenament amb el 80% de les dades seleccionades aleatòriament
+train_rows <- sample(rownames(train_clean), dim(train_clean)[1]*0.8)
+train_data <- train_clean[train_rows, ]
+# I un conjunt de dades de valicació format amb el 20% restant. 
+test_rows <- setdiff(rownames(train_clean), train_rows)
+test_data <- train_clean[test_rows, ]
+```
+
+### 4.1.2 Anàlisi Inferencial
+Es preten respondre la pregunta de si la mitjana de preus de venta és inferior després d'explotar la bombolla inmobiliaria. Donat que el dataset proporciona les transaccions de venta de vivendes entre el 2006 i el 2010, es poden crear els 2 grups de dades següents:
+
+- `Sales-Before`: Transaccions de venda realitzades durant els anys 2006 i fins a març de 2007
+
+- `Sales-After`: Transaccions de venda realitzades a partir d'abril del 2007.
+
+```{r}
+idx <- which( train_csv$YrSold=="2006" | (train_csv$YrSold=="2007" & as.numeric(train_csv$MoSold)<"4"))
+#idx <- which( sales_ames$RemodeledFlag==0)
+
+sales_before <- train_clean[idx,]$SalePrice
+sales_after <- train_clean[-idx,]$SalePrice
+```
+
+## 4.2. Comprovació de la normalitat i homogeneïtat de la variància.
+
+### 4.2.1 Comprovació de la normalitat
+
+Aplicar el test de `Shapiro-Wilk`i `Kolmogorov-Smirnov`per comprovar si la mostra `sales_before` segueix una distribució normal.
+```{r inferencial-normalitat-sales-before}
+#Kolmogorov-Smirnov Test
+ks.pvalue<-ks.test(sales_before, pnorm, mean(sales_before), sd(sales_before))$p.value
+#Shapiro-Wilk Test
+shapiro.pvalue<-shapiro.test(sales_before)$p.value
+if (ks.pvalue<0.05) {
+  cat ("\n Kolmogorov-Smirnov: Hipotesi nula rebutjada - No es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+} else {
+  cat("\n Kolmogorov-Smirnov: Hipotesi nula acceptada - Es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+}
+
+if (shapiro.pvalue<0.05) {
+  cat ("\n Shapiro-Wilk: Hipotesi nula rebutjada - No es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+} else {
+  cat("\n Shapiro-Wilk: Hipotesi nula acceptada - Es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+}
+
+```
+
+Donat que no es compleix l'assumpció de NORMALITAT a cap dels dos grups, s'aplica la transformació de `Box-Cox` per millorar la normalitat de `sales_before`.
+```{r}
+sales_before_bx <- BoxCox(sales_before, lambda=BoxCoxLambda(sales_before))
+```
+
+Tornar a aplicar el test de `Shapiro-Wilk`i `Kolmogorov-Smirnov`per comprovar si la mostra transformada `sales_before_bx` segueix una distribució normal.
+```{r}
+#Kolmogorov-Smirnov Test
+ks.pvalue<-ks.test(sales_before_bx, pnorm, mean(sales_before_bx), sd(sales_before_bx))$p.value
+#Shapiro-Wilk Test
+shapiro.pvalue<-shapiro.test(sales_before_bx)$p.value
+if (ks.pvalue<0.05) {
+  cat ("\n Kolmogorov-Smirnov: Hipotesi nula rebutjada - No es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+
+} else {
+  cat("\n Kolmogorov-Smirnov: Hipotesi nula acceptada - Es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+}
+
+if (shapiro.pvalue<0.05) {
+  cat ("\n Shapiro-Wilk: Hipotesi nula rebutjada - No es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+} else {
+  cat("\n Shapiro-Wilk: Hipotesi nula acceptada - Es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+}
+
+```
+
+Representació gràfica on es compara la mostra `sales_before_bx` abans i després d'aplicar la transformació de `Box-Cox`.
+
+- **Gràfica Q-Q**: Es compleix la Normalitat si els punts es distribueixen sobre una linea recta.
+- **Histogràma:** Es compleix la Normalitat si la distribució dels valors es reparteixen a banda i banda d'un valor central.
+
+```{r}
+par(mfrow=c(2,2))
+  qqnorm(sales_before, main="SalesBefore")
+  qqline(sales_before,col=2)
+  qqnorm(sales_before_bx, main="Box-Cox")
+  qqline(sales_before_bx,col=2)
+  hist(sales_before,main="SalesBefore")
+  hist(sales_before_bx, main="Box-Cox")
+```
+
+Aplicar el test de `Shapiro-Wilk`i `Kolmogorov-Smirnov`per comprovar si la mostra `sales_after` segueix una distribució normal.
+
+```{r inferencial-normalitat-sales-after}
+#Kolmogorov-Smirnov Test
+ks.pvalue<-ks.test(sales_after, pnorm, mean(sales_after), sd(sales_after))$p.value
+#Shapiro-Wilk Test
+shapiro.pvalue<-shapiro.test(sales_after)$p.value
+if (ks.pvalue<0.05) {
+  cat ("\n Kolmogorov-Smirnov: Hipotesi nula rebutjada - No es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+
+} else {
+  cat("\n Kolmogorov-Smirnov: Hipotesi nula acceptada - Es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+}
+
+if (shapiro.pvalue<0.05) {
+  cat ("\n Shapiro-Wilk: Hipotesi nula rebutjada - No es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+} else {
+  cat("\n Shapiro-Wilk: Hipotesi nula acceptada - Es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+}
+```
+
+Donat que no es compleix l'assumpció de NORMALITAT a cap dels dos grups, s'aplica la transformació de `Box-Cox` per millorar la normalitat de la distribució de la mostra `sales_after`.
+```{r}
+sales_after_bx <- BoxCox(sales_after, lambda=BoxCoxLambda(sales_after))
+```
+
+Tornar a aplicar el test de `Shapiro-Wilk`i `Kolmogorov-Smirnov`per comprovar si la mostra transformada `sales_before_bx` segueix una distribució normal.
+```{r}
+#Kolmogorov-Smirnov Test
+#sales_after_bx<-log10(max(sales_after_bx+1)-sales_after_bx)
+ks.pvalue<-ks.test(sales_after_bx, pnorm, mean(sales_after_bx), sd(sales_after_bx))$p.value
+#Shapiro-Wilk Test
+shapiro.pvalue<-shapiro.test(sales_after_bx)$p.value
+
+if (ks.pvalue<0.05) {
+  cat ("\n Kolmogorov-Smirnov: Hipotesi nula rebutjada - No es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+
+} else {
+  cat("\n Kolmogorov-Smirnov: Hipotesi nula acceptada - Es compleix NORMALITAT - KS Test p.value= \n", ks.pvalue)
+}
+
+if (shapiro.pvalue<0.05) {
+  cat ("\n Shapiro-Wilk: Hipotesi nula rebutjada - No es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+} else {
+  cat("\n Shapiro-Wilk: Hipotesi nula acceptada - Es compleix NORMALITAT - Shapiro Test p.value= \n", shapiro.pvalue)
+}
+
+```
+
+Representació gràfica on es compara la mostra `sales_after` abans i després d'aplicar la transformació de `Box-Cox`.
+
+- **Gràfica Q-Q**: Es compleix la Normalitat si els punts formen una linea recta.
+- **Histogràma:** Es compleix la Normalitat si la distribució dels valors es reparteixen a banda i banda d'un valor central.
+```{r}
+par(mfrow=c(2,2))
+qqnorm(sales_after, main="SalesAfter")
+qqline(sales_after,col=2)
+qqnorm(sales_after_bx, main="Box-Cox")
+qqline(sales_after_bx,col=2)
+hist(sales_after,main="SalesAfter")
+hist(sales_after_bx, main="Box-Cox")
+```
+
+**Conclusió:** 
+El teorema central del límit afirma que donada una variable aleatòria X amb una mitjana `mu` i si en tamany de la mostra és `n > 30`, aleshores es pot considerar que aquesta variable es comporta aproximadament com una distribució normal estàndar.
+
+Comprovació del tamany de les mostres:
+
+- Sales Before, n = `r length(sales_before)` > 30 => Distibució Normal
+- Sales Before, n = `r length(sales_after)` > 30 => Distibució Normal
+
+### 4.2.2 Comprovació de la Homoscedasticitat
+Comprovar si les dues mostres `sales_before` i `sales_after` compleixen la igualtat de variàncies entre ells.
+
+- `Hipòtesi Nula`: Variàncies de les mostres són iguals
+- `Hipòtesi Alternativa`: Variàncies de les mostres són diferernts
+```{r}
+# Preparació de dades
+df_before <- data.frame( 
+                group = "BeforeCrisis",
+                SalePrice = c(sales_before_bx)
+                )
+df_after <- data.frame( 
+                group = "AfterCrisis",
+                SalePrice = c(sales_after_bx)
+                )
+
+df_group <- rbind(df_before, df_after)
+
+# Test de Levene
+leveneTest(SalePrice~group,data=df_group)
+
+# Test de Fligner
+fligner.test(SalePrice~group, data = df_group)
+
+```
+***Interpretació del Resultat:***
+
+Donat que el `p-value` obtingut aplicant el test de `Levene` i el test de `Flingner` es inferior al nivell de significació `alpha=0.05`, es rebutja la hipotèsi nul·la `H0`i s'accepta l hipòtesi alternativa `H1`, es a dir, que les variàncies de les mostres ***són diferents***.
+
+
+## 4.3. Aplicació de proves estadístiques per comparar els grups de dades. En funció de les dades i de l’objectiu de l’estudi, aplicar proves de contrast d’hipòtesis, correlacions, regressions, etc. Aplicar almenys tres mètodes d’anàlisi diferents.
+
+### 4.3.1 Contrast de mostres
+
+Donat que les dues mostres són independents però no es compleix la homoscedasticitat, s'aplica la prova no paràmetrica de `Mann-Whitney`.
+
+- ***Hipòtesi Nula:*** No existeixen diferències estadístiques significatives entre les 2 mostres.
+- ***Hipòtesi Alternativa:*** Existeixen difèrencies estadístiques significatives entre les 2 mostres.
+
+```{r}
+# Test de Mann-Whitney
+wilcox.test(sales_before_bx,sales_after_bx, paired = FALSE) 
+
+```
+***Interpretació del Resultat***
+
+Donat que el `p-value` que s'ha obtingut és inferior al nivell de significació `alpha=0.05`, es rebutja la hipòtesi nula i s'accepta que les mostres tenen diferencies estadístiques significatives. Aplicat al context de les mostres, s'arriba a la conclusió que els preus de les vendes realitzats abans i després de l'explosió de la bombolla inmobiliaria tenen diferencies significatives.
+
+### 4.3.2 Model Supervisat: Regressió Lineal Múltiple
+```{r}
+train_data$SalePrice <- train_clean[train_rows,]$SalePrice
+test_data$SalePrice <-train_clean[test_rows,]$SalePrice
+
+model_lm <- lm(formula=train_data$SalePrice ~., data=train_data) # build the model
+summary(model_lm)
+
+```
+
+```{r}
+prediccions <- predict(model_lm, newdata=test_data)
+taula_prediccions <- data.frame(test_data$SalePrice, prediccions, residuals=test_data$SalePrice-prediccions)
+head(taula_prediccions,10)
+
+
+taula_comparativa=data.frame(actual=test_data$SalePrice, predicted=prediccions)
+
+mape=mean(abs(taula_comparativa$actual-taula_comparativa$predicted)/taula_comparativa$actual)
+precisio_model=1-mape
+precisio_model 
+```
+### 4.3.3 Correlacions: Multicol·linealitat
+Per al posterior disseny d'un model predictiu de regressió lineal, comprovar si es detecten variables predictores que estiguin molt correlacionades entre elles (multicol·linelitat).
+
+```{r}
+predictors<-train_clean %>% select(
+  'LotArea',
+  'OverallQual',
+  'OverallCond',
+  'MasVnrArea',
+  'BsmtUnfSF',
+  'X1stFlrSF',        
+  'X2ndFlrSF',        
+  'BedroomAbvGr',
+  'TotRmsAbvGrd',
+  'GarageCars',
+  'WoodDeckSF',
+  'ScreenPorch',
+  'PoolArea',
+  'ExterQualRank',
+  'BsmtQualRank',
+  'KitchenQualRank',
+  'GarageQualRank',
+  'BsmtFinType1Rank',
+  'NeighborhoodRank',
+  'HouseAge',
+  'RemodeledFlag',
+  'PoolFlag')
+  
+correlation=cor(predictors)
+corrplot(correlation,method="color")
+
+```
+Buscar variables que tinguin un coeficient de correlació superior al 80%.
+```{r}
+corr_high <- findCorrelation(correlation, cutoff = 0.8)
+print(paste0("Variables amb un coeficient de correlació >= 80% : ", length(corr_high)))
+
+colnames(predictors[corr_high])
+```
+```{r}
+predictors <- predictors[colnames(predictors)!="PoolArea"]
+```
+
+***Interpretació del Resultat:***
+No es detecta multicol·linealitat entre cap de les variables predictores, donat que cap dels coeficients de correlació ha superat el llindar del 80%.
+
+### 4.3.4 Model Supervisat: Millora i Precisió
+Després d'eliminar les variables predictores poc significatives i tractar si existeix multicol·linealitat entre elles, es torna a crear un model i s'evalua la seva precisió.
+```{r}
+train_data<-train_data[colnames(predictors)]
+test_data<-test_data[colnames(predictors)] 
+
+train_data$SalePrice <- train_clean[train_rows,]$SalePrice
+test_data$SalePrice <-train_clean[test_rows,]$SalePrice
+
+model_lm <- lm(formula=train_data$SalePrice ~., data=train_data) # build the model
+summary(model_lm)
+
+```
+```{r}
+prediccions <- predict(model_lm, newdata=test_data)
+taula_prediccions <- data.frame(test_data$SalePrice, prediccions, residuals=test_data$SalePrice-prediccions)
+head(taula_prediccions,10)
+
+
+taula_comparativa=data.frame(actual=test_data$SalePrice, predicted=prediccions)
+
+mape=mean(abs(taula_comparativa$actual-taula_comparativa$predicted)/taula_comparativa$actual)
+precisio_model=1-mape
+precisio_model 
+```
