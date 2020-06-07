@@ -8,21 +8,10 @@
 
 **Màster Ciència de Dades**
 
-Github: https://github.com/xrecaj/uoc-tcvda-neteja-analisi-house
+Per saber com s'estructuren els entregables de la pràctica, visitar la wiki:
 
-WebSite: https://xrecaj.github.io/uoc-tcvda-neteja-analisi-house/
+https://github.com/xrecaj/uoc-tcvda-neteja-analisi-house/wiki
 
-Estructura de Directoris i Fitxers:
+Per visualtizar el resultat del desenvolupament en codi R, es pot visitar el site del repositori de Github:
 
-> Root
-  - Codi R
-  - Document PDF Respostes Pràctica
-  + Docs
-    - HTML R Notebook
-  + Data
-    - train.csv - dataset train original Ames House Predictions
-    - test.csv - dataset test original Ames House Preditions
-    - train_clean.csv, test_clean.csv - dataset tractat i netejat per a anàlisi predictiu MLR
-    - submission.csv - dataset resultat prediccions competició Kaggle
-    
- 
+https://xrecaj.github.io/uoc-tcvda-neteja-analisi-house/
