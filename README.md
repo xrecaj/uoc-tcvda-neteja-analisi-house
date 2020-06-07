@@ -1,17 +1,18 @@
 # Tipologia i Cicle de Vida de les Dades: 
-## Preparació, Neteja i Anàlisis de Dades (PRA02)
+**Preparació, Neteja i Anàlisis de Dades**
+**(PRA02)**
 
-Data Entrega: 9 Juny 2020
-Alumne : Xavi Recaj 
-Màster Ciència de Dades
+**Data Entrega**: 9 Juny 2020
+**Alumne** : Xavi Recaj 
+**Màster Ciència de Dades**
 
 Github: https://github.com/xrecaj/uoc-tcvda-neteja-analisi-house
 
 WebSite: https://xrecaj.github.io/uoc-tcvda-neteja-analisi-house/
 
-Estructura de Directoris:
+Estructura de Directoris i Fitxers:
 
-Root
+> Root
   - Codi R
   - Document PDF Respostes Pràctica
   + Docs
